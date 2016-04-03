@@ -21,13 +21,21 @@ public class ChatServer
         this.frontend = frontend;
     }
     
+    /**
+     * Listen for incoming connections on specified port number
+     * 
+     * @param portNumber 
+     */
     public void start(int portNumber)
     {
-        
+        // TODO
     }
     
+    /**
+     * Stop listening for new connections and disconnect all active connections
+     */
     public void stop()
     {
-        
+        // TODO
     }
 }

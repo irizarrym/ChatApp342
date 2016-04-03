@@ -11,5 +11,9 @@ package chatapp;
 
 public class GuiServer implements iServerEvent
 {
-    
+    public static void main(String[] args)
+    {
+        // TODO
+        GuiServer gui = new GuiServer();
+    }
 }

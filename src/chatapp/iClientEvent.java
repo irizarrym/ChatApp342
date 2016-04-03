@@ -9,12 +9,15 @@
 
 package chatapp;
 
+/**
+ * A basic interface to notify the client front end of certain events
+ */
 public interface iClientEvent
 {
-    public void connectServer(int portNumber);
+    public void connectServer(String ip, int portNumber);
     public void disconnectServer();
     public void setUserName(String username);
-    public void requestUserList();
+    public void receiveUserList(String[] userlist);
     public void sendMessageToUser(String to, String message);
     public void sendMessageToAll(String message);
     public void receiveMessage(String from, String message, boolean isPrivate);

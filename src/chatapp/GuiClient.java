@@ -11,5 +11,9 @@ package chatapp;
 
 public class GuiClient implements iClientEvent
 {
-    
+    public static void main(String[] args)
+    {
+        // TODO
+        GuiClient gui = new GuiClient();
+    }
 }

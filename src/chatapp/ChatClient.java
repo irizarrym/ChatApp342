@@ -9,7 +9,25 @@
 
 package chatapp;
 
+import java.net.*;
+
 public class ChatClient
 {
+    private Socket socket = null;
+    private final iClientEvent frontend;
     
+    public ChatClient(iClientEvent frontend)
+    {
+        this.frontend = frontend;
+    }
+    
+    public void start(String ip, int portNumber)
+    {
+        // TODO
+    }
+    
+    public void stop()
+    {
+        // TODO
+    }
 }
