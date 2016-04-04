@@ -10,6 +10,7 @@
 package chatapp;
 
 import java.util.*;
+import java.util.regex.*;
 
 /**
  * A general interface for handling packets received by the client
@@ -25,7 +26,166 @@ public interface ClientPacket
      */
     public static void processPacket(ClientPacket handler, String packet)
     {
-        // TODO
+        String[] lines = packet.split(System.getProperty("line.separator"));
+        Pattern username = Pattern.compile("^[A-Za-z0-9]+$");
+        
+        if(lines.length > 0)
+        {
+            // Identify header of packet
+            switch(lines[0])
+            {
+                case "USERLIST":
+                {
+                    if(lines.length < 3)
+                    {
+                        handler.packetError(packet, "USERLIST packet must contain three lines");
+                        return;
+                    }
+                    
+                    if(lines[1] != "")
+                    {
+                        handler.packetError(packet, "missing blank line between header and body");
+                        return;
+                    }
+                    
+                    // Construct ArrayList of user names
+                    ArrayList<String> userList = new ArrayList<>();
+                    for(int i = 2; i < lines.length; ++i)
+                    {
+                        Matcher m = username.matcher(lines[i]);
+                        if(m.matches())
+                        {
+                            userList.add(lines[i]);
+                        }
+                    }
+                    
+                    handler.setUserList(userList);
+                } break;
+
+                case "PUBLIC_MESSAGE":
+                {
+                    if(lines.length < 4)
+                    {
+                        handler.packetError(packet, "PUBLIC_MESSAGE packet must contain four lines");
+                        return;
+                    }
+                    
+                    if(lines[2] != "")
+                    {
+                        handler.packetError(packet, "missing blank line between header and body");
+                        return;
+                    }
+                    
+                    // Check username on second line
+                    Matcher m = username.matcher(lines[1]);
+                    if(!m.matches())
+                    {
+                        handler.packetError(packet, "username contains invalid characters");
+                        return;
+                    }
+                    
+                    // Construct message from remaining lines of packet
+                    String message = "";
+                    for(int i = 3; i < lines.length; ++i)
+                    {
+                        message += lines[i];
+                    }
+                    
+                    handler.receivePublicMessage(lines[1], message);
+                } break;
+
+                case "PRIVATE_MESSAGE":
+                {
+                    if(lines.length < 4)
+                    {
+                        handler.packetError(packet, "PRIVATE_MESSAGE packet must contain four lines");
+                        return;
+                    }
+                    
+                    if(lines[2] != "")
+                    {
+                        handler.packetError(packet, "missing blank line between header and body");
+                        return;
+                    }
+                    
+                    // Check username on second line
+                    Matcher m = username.matcher(lines[1]);
+                    if(!m.matches())
+                    {
+                        handler.packetError(packet, "username contains invalid characters");
+                        return;
+                    }
+                    
+                    // Construct message from remaining lines of packet
+                    String message = "";
+                    for(int i = 3; i < lines.length; ++i)
+                    {
+                        message += lines[i];
+                    }
+                    
+                    handler.receivePrivateMessage(lines[1], message);
+                } break;
+
+                case "STATUS":
+                {
+                    if(lines.length < 3)
+                    {
+                        handler.packetError(packet, "STATUS packet must contain at least three lines");
+                        return;
+                    }
+                    
+                    if(lines[1] != "")
+                    {
+                        handler.packetError(packet, "missing blank line between header and body");
+                        return;
+                    }
+                    
+                    // Construct message from remaining lines of packet
+                    String message = "";
+                    for(int i = 2; i < lines.length; ++i)
+                    {
+                        message += lines[i];
+                    }
+                    
+                    handler.receiveStatusPacket(message, false);
+                } break;
+
+                case "ERROR":
+                {
+                    if(lines.length < 3)
+                    {
+                        handler.packetError(packet, "ERROR packet must contain at least three lines");
+                        return;
+                    }
+                    
+                    if(lines[1] != "")
+                    {
+                        handler.packetError(packet, "missing blank line between header and body");
+                        return;
+                    }
+                    
+                    // Construct message from remaining lines of packet
+                    String message = "";
+                    for(int i = 2; i < lines.length; ++i)
+                    {
+                        message += lines[i];
+                    }
+                    
+                    handler.receiveStatusPacket(message, true);
+                } break;
+
+                default:
+                {
+                    handler.packetError(packet, "unknown packet type");
+                    return;
+                } // break;
+            }
+        }
+        else
+        {
+            handler.packetError(packet, "empty packet");
+            return;
+        }
     }
     
     /**
@@ -36,8 +196,7 @@ public interface ClientPacket
      */
     public static String constructUserNamePacket(String username)
     {
-        // TODO
-        return "";
+        return "USERNAME\n\n" + username;
     }
     
     /**
@@ -49,8 +208,7 @@ public interface ClientPacket
      */
     public static String constructPublicMessagePacket(String message)
     {
-        // TODO
-        return "";
+        return "PUBLIC_MESSAGE\n\n" + message;
     }
     
     /**
@@ -63,8 +221,7 @@ public interface ClientPacket
      */
     public static String constructPrivateMessagePacket(String username, String message)
     {
-        // TODO
-        return "";
+        return "PRIVATE_MESSAGE\n" + username + "\n\n" + message;
     }
     
     /**
@@ -76,8 +233,8 @@ public interface ClientPacket
      */
     public static String constructStatusPacket(String message, boolean isError)
     {
-        // TODO
-        return "";
+        String result = isError ? "STATUS\n\n" : "ERROR\n\n";
+        return result + message;
     }
     
     /**
@@ -112,9 +269,11 @@ public interface ClientPacket
     public void receiveStatusPacket(String status, boolean isError);
     
     /**
-     * An unrecognized or invalid packet type was received from a client
+     * There was an error parsing the incoming packet due to an invalid header
+     * or is improperly formatted
      * 
      * @param packet    Packet received from client
+     * @param error     Specific error message
      */
-    public void unknownPacketType(String packet);
+    public void packetError(String packet, String error);
 }
