@@ -10,15 +10,18 @@
 package chatapp;
 
 import java.net.*;
+import java.util.*;
 
 public class ChatServer
 {
     private ServerSocket socket = null;
     private final ServerEvent frontend;
+    private ArrayList<ClientConnection> clients;
     
     public ChatServer(ServerEvent frontend)
     {
         this.frontend = frontend;
+        clients = new ArrayList<>();
     }
     
     /**
@@ -35,6 +38,14 @@ public class ChatServer
      * Stop listening for new connections and disconnect all active connections
      */
     public void stop()
+    {
+        // TODO
+    }
+    
+    /**
+     * Each instance of this class handles a client connected to the server
+     */
+    private class ClientConnection extends Thread implements ServerPacket
     {
         // TODO
     }

@@ -11,7 +11,7 @@ package chatapp;
 
 import java.net.*;
 
-public class ChatClient
+public class ChatClient implements ClientPacket
 {
     private Socket socket = null;
     private final ClientEvent frontend;
