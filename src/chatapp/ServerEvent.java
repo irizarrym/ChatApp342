@@ -12,7 +12,7 @@ package chatapp;
 /**
  * A basic interface to notify the server front end of certain events
  */
-public interface iServerEvent
+public interface ServerEvent
 {
     public void startServer(int portNumber);
     public void stopServer();

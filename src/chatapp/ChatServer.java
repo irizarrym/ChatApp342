@@ -14,9 +14,9 @@ import java.net.*;
 public class ChatServer
 {
     private ServerSocket socket = null;
-    private final iServerEvent frontend;
+    private final ServerEvent frontend;
     
-    public ChatServer(iServerEvent frontend)
+    public ChatServer(ServerEvent frontend)
     {
         this.frontend = frontend;
     }

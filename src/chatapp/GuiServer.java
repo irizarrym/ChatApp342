@@ -9,7 +9,7 @@
 
 package chatapp;
 
-public class GuiServer implements iServerEvent
+public class GuiServer implements ServerEvent
 {
     public static void main(String[] args)
     {

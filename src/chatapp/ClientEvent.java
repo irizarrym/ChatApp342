@@ -12,7 +12,7 @@ package chatapp;
 /**
  * A basic interface to notify the client front end of certain events
  */
-public interface iClientEvent
+public interface ClientEvent
 {
     public void connectServer(String ip, int portNumber);
     public void disconnectServer();

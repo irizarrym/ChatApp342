@@ -9,7 +9,7 @@
 
 package chatapp;
 
-public class GuiClient implements iClientEvent
+public class GuiClient implements ClientEvent
 {
     public static void main(String[] args)
     {

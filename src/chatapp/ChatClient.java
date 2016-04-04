@@ -14,9 +14,9 @@ import java.net.*;
 public class ChatClient
 {
     private Socket socket = null;
-    private final iClientEvent frontend;
+    private final ClientEvent frontend;
     
-    public ChatClient(iClientEvent frontend)
+    public ChatClient(ClientEvent frontend)
     {
         this.frontend = frontend;
     }
