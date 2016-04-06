@@ -9,14 +9,16 @@
 
 package chatapp;
 
+import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.logging.*;
 
-public class ChatClient implements ClientPacket
+public class ChatClient
 {
-    private Socket socket = null;
     private final ClientEvent frontend;
-    private String username;
+    private String username = "";
+    ServerConnection server = null;
     
     public ChatClient(ClientEvent frontend)
     {
@@ -25,14 +27,22 @@ public class ChatClient implements ClientPacket
     
     public void start(String ip, int portNumber)
     {
-        frontend.connectServer(ip, portNumber);
-        // TODO
+        try
+        {
+            server = new ServerConnection(ip, portNumber);
+            frontend.connectServer(ip, portNumber);
+        }
+        catch (IOException ex)
+        {
+            frontend.chatClientError("Failed to connect to server; " + ex.getMessage());
+            Logger.getLogger(ChatClient.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     public void stop()
     {
         frontend.disconnectServer();
-        // TODO
+        // TODO disconnect from server
     }
     
     public void setUserName(String name)
@@ -45,46 +55,98 @@ public class ChatClient implements ClientPacket
         return username;
     }
     
-    public void sendMessage(String message)
+    public void sendMessage(String message) throws IOException
     {
-        frontend.sendMessageToAll(message);
-        // TODO
+        if(server != null)
+        {
+            server.sendPacket(ClientPacket.constructPublicMessagePacket(message));
+            frontend.sendMessageToAll(message);
+        }
     }
     
-    public void sendMessage(String username, String message)
+    public void sendMessage(String username, String message) throws IOException
     {
-        frontend.sendMessageToUser(username, message);
-        // TODO
+        if(server != null)
+        {
+            server.sendPacket(ClientPacket.constructPrivateMessagePacket(username, message));
+            frontend.sendMessageToUser(username, message);
+        }
     }
 
-    @Override
-    public void setUserList(List<String> userlist)
+    private class ServerConnection extends Thread implements ClientPacket
     {
-        frontend.receiveUserList(userlist);
-        // TODO
-    }
+        private Socket socket;
+        private ObjectInputStream in;
+        private ObjectOutputStream out;
+        boolean active = false;
+        
+        public ServerConnection(String IP, int port) throws IOException
+        {
+            super();
+            socket = new Socket(IP, port);
+            in = new ObjectInputStream(socket.getInputStream());
+            out = new ObjectOutputStream(socket.getOutputStream());
+            active = true;
+        }
+        
+        @Override
+        public void run()
+        {
+            try
+            {
+                String packet;
+                while((packet = (String)in.readObject()) != null)
+                {
+                    ClientPacket.processPacket(this, packet);
+                }
+                
+                in.close();
+                out.close();
+                socket.close();
+            }
+            catch (IOException ex)
+            {
+                Logger.getLogger(ChatClient.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            catch (ClassNotFoundException ex)
+            {
+                Logger.getLogger(ChatClient.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        @Override
+        public void setUserList(List<String> userlist)
+        {
+            frontend.receiveUserList(userlist);
+        }
 
-    @Override
-    public void receivePublicMessage(String username, String message)
-    {
-        frontend.receiveMessage(username, message, false);
-    }
+        @Override
+        public void receivePublicMessage(String username, String message)
+        {
+            frontend.receiveMessage(username, message, false);
+        }
 
-    @Override
-    public void receivePrivateMessage(String username, String message)
-    {
-        frontend.receiveMessage(username, message, true);
-    }
+        @Override
+        public void receivePrivateMessage(String username, String message)
+        {
+            frontend.receiveMessage(username, message, true);
+        }
 
-    @Override
-    public void receiveStatusPacket(String status, boolean isError)
-    {
-        frontend.receiveStatusPacket(status, isError);
-    }
+        @Override
+        public void receiveStatusPacket(String status, boolean isError)
+        {
+            frontend.receiveStatusPacket(status, isError);
+        }
 
-    @Override
-    public void packetError(String packet, String error)
-    {
-        frontend.chatClientError("PACKET ERROR (" + error + "): " + packet);
+        @Override
+        public void packetError(String packet, String error)
+        {
+            frontend.chatClientError("PACKET ERROR (" + error + "): " + packet);
+        }
+        
+        private void sendPacket(String packet) throws IOException
+        {
+            out.writeObject(packet);
+        }
     }
 }
