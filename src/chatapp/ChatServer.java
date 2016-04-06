@@ -27,11 +27,12 @@ public class ChatServer
     /**
      * Listen for incoming connections on specified port number
      * 
-     * @param portNumber 
+     * @param portNumber
      */
     public void start(int portNumber)
     {
         // TODO
+        frontend.startServer(portNumber);
     }
     
     /**
@@ -40,6 +41,7 @@ public class ChatServer
     public void stop()
     {
         // TODO
+        frontend.stopServer();
     }
     
     /**
@@ -47,6 +49,54 @@ public class ChatServer
      */
     private class ClientConnection extends Thread implements ServerPacket
     {
-        // TODO
+        private String username;
+        
+        public ClientConnection()
+        {
+            
+        }
+        
+        @Override
+        public void run()
+        {
+            // TODO listen for incoming traffic
+        }
+        
+        @Override
+        public String getUserName()
+        {
+            return username;
+        }
+
+        @Override
+        public void setUserName(String username)
+        {
+            this.username = username;
+        }
+
+        @Override
+        public void sendPublicMessage(String packet)
+        {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public void sendPrivateMessage(String username, String packet)
+        {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public void receiveStatusPacket(String status, boolean isError)
+        {
+            frontend.receiveStatusPacket(status, isError);
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public void packetError(String packet, String error)
+        {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
     }
 }

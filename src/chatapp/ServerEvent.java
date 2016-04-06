@@ -22,5 +22,6 @@ public interface ServerEvent
     public void sendMessageToUser(String from, String to, String message);
     public void sendMessageToAll(String from, String message);
     public void sendUserList(String username);
+    public void receiveStatusPacket(String message, boolean isError);
     public void chatServerError(String err);
 }
