@@ -11,6 +11,7 @@ package chatapp;
 
 import java.awt.*;
 import java.awt.event.*;
+
 import javax.swing.*;
 
 public class GuiServer extends JFrame implements ActionListener, ServerEvent
@@ -55,6 +56,7 @@ public class GuiServer extends JFrame implements ActionListener, ServerEvent
         // Display GUI
         setLocationRelativeTo(null); // Center window on screen
         super.setVisible(true);
+        
     }
     
     @Override

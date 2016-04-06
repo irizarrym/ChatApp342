@@ -115,7 +115,9 @@ public class ChatClient
         
         public void disconnect() throws IOException
         {
-            try
+            out.writeObject("OFFLINE");
+        	
+        	try
             {
                 in.close();
                 out.close();

@@ -236,6 +236,7 @@ public interface ClientPacket
         String result = isError ? "STATUS\n\n" : "ERROR\n\n";
         return result + message;
     }
+
     
     /**
      * A new or updated user list was received from the server

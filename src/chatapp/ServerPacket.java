@@ -141,6 +141,11 @@ public interface ServerPacket
                     
                     handler.receiveStatusPacket(message, false);
                 } break;
+                
+                case "OFFLINE":
+                {
+                	handler.disconnect();
+                } break;
 
                 case "ERROR":
                 {
@@ -212,6 +217,8 @@ public interface ServerPacket
      * @return client username
      */
     public String getUserName();
+    
+    public void disconnect();
     
     /**
      * A request was received from the client to set their username

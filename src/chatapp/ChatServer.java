@@ -9,14 +9,20 @@
 
 package chatapp;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.*;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ChatServer
 {
     private ServerSocket socket = null;
-    private final ServerEvent frontend;
-    private ArrayList<ClientConnection> clients;
+    private static ServerEvent frontend;
+    private static ArrayList<ClientConnection> clients;
+    private ClientListener listener;
     
     public ChatServer(ServerEvent frontend)
     {
@@ -31,8 +37,7 @@ public class ChatServer
      */
     public void start(int portNumber)
     {
-        // TODO
-        frontend.startServer(portNumber);
+        listener = new ClientListener(portNumber);
     }
     
     /**
@@ -40,8 +45,116 @@ public class ChatServer
      */
     public void stop()
     {
-        // TODO
-        frontend.stopServer();
+        try
+        {
+        	socket.close();
+        	for(int i=0;i<clients.size();i++)
+        	{
+        		if(clients.get(i).active) clients.get(i).disconnect();
+        	}
+        	frontend.stopServer();
+        }
+        catch (IOException e)
+        {
+        	System.err.println("Could not stop.");
+        	System.exit(1);
+        }
+    }
+    
+    public static void refreshUsers()
+    {
+    	List<String> userlist;
+    	
+    	for(int i=0;i<clients.size();i++)
+    	{
+    		if(clients.get(i).active) userlist.add(clients.get(i).getUserName());
+    	}
+    	
+    	for(int i=0;i<clients.size();i++)
+    	{
+    		if(clients.get(i).active) 
+    		{
+    			clients.get(i).sendPacket(ServerPacket.constructUserListPacket(userlist));
+    			frontend.sendUserList(clients.get(i).getUserName());
+    		}
+    	}
+    }
+    
+    public static void publicMessage(String packet)
+    {
+    	for(int i=0;i<clients.size();i++)
+    	{
+    		if(clients.get(i).active)
+    		{
+				try
+				{
+					clients.get(i).sendPacket(packet);
+				} 
+				catch (IOException e) 
+				{
+					e.printStackTrace();
+				}
+    		}
+    	}
+    }
+    
+    public static void privateMessage(String to, String packet)
+    {
+    	for(int i=0;i<clients.size();i++)
+    	{
+    		if(clients.get(i).active && clients.get(i).getUserName().equals(to))
+    		{
+				try
+				{
+					clients.get(i).sendPacket(packet);
+				} 
+				catch (IOException e) 
+				{
+					e.printStackTrace();
+				}
+    		}
+    		else
+    		{
+    			frontend.chatServerError("Receiver not found.");
+    		}
+    	}
+    }
+    
+    private class ClientListener extends Thread
+    {
+    	int portNumber;
+    	
+    	public ClientListener (int port)
+    	{
+    		portNumber = port;
+    		start();
+    	}
+    	
+    	@Override
+    	public void run()
+    	{
+    		try
+            {
+    			socket = new ServerSocket(portNumber);
+    			frontend.startServer(portNumber);
+    			try
+    			{
+    				while(true)
+    				{
+    					clients.add(new ClientConnection (socket.accept()));
+    				}
+    			}
+    			catch (IOException e)
+    			{
+    				System.err.println("Accept failed.");
+    			}
+    		} 
+            catch (IOException e) 
+            {
+    			System.err.println("Could not start.");
+    			//System.exit(1);
+    		}
+    	}
     }
     
     /**
@@ -49,17 +162,71 @@ public class ChatServer
      */
     private class ClientConnection extends Thread implements ServerPacket
     {
-        private String username;
+        private String ip;
+    	private String username;
+        private Socket clientSocket;
+        private ObjectInputStream in;
+        private ObjectOutputStream out;
+        boolean active = false;
         
-        public ClientConnection()
+        public ClientConnection(Socket clientSoc) throws IOException
         {
-            
+            super();
+        	clientSocket = clientSoc;
+            in = new ObjectInputStream(clientSocket.getInputStream());
+            out = new ObjectOutputStream(clientSocket.getOutputStream());
+            ip = clientSocket.getRemoteSocketAddress().toString();
+            username = "New Client";
+            active = true;
+            frontend.openConnection(ip);
         }
         
         @Override
         public void run()
         {
-            // TODO listen for incoming traffic
+        	
+        	try
+            {
+                String packet;
+                while((packet = (String)in.readObject()) != null)
+                {
+                    ServerPacket.processPacket(this, packet);
+                }
+                
+            }
+            catch (IOException ex)
+            {
+                Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            catch (ClassNotFoundException ex)
+            {
+                Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        @Override
+        public void disconnect()
+        {
+        	if(active)
+        	{
+        		try
+        		{
+        			in.close();
+					out.close();
+					clientSocket.close();
+				} 
+        		catch (IOException e) 
+        		{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+        		finally
+        		{
+        			active = false;
+        			ChatServer.refreshUsers();
+        			frontend.closeConnection(ip);
+        		}
+        	}
         }
         
         @Override
@@ -72,31 +239,40 @@ public class ChatServer
         public void setUserName(String username)
         {
             this.username = username;
+            frontend.setUserName(ip, username);
+            ChatServer.refreshUsers();
+        }
+        
+        public void sendPacket(String packet) throws IOException
+        {
+        	out.writeObject(packet);
         }
 
         @Override
         public void sendPublicMessage(String packet)
         {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            ChatServer.publicMessage(packet);
+        	frontend.sendMessageToAll(username, packet);
         }
 
         @Override
-        public void sendPrivateMessage(String username, String packet)
+        public void sendPrivateMessage(String to, String packet)
         {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            ChatServer.privateMessage(to, packet);
+        	frontend.sendMessageToUser(username, to, packet);
         }
 
         @Override
         public void receiveStatusPacket(String status, boolean isError)
         {
             frontend.receiveStatusPacket(status, isError);
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
         @Override
         public void packetError(String packet, String error)
         {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            frontend.chatServerError(packet + " : " + error);
         }
     }
 }
