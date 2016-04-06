@@ -11,6 +11,7 @@ package chatapp;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import java.util.List;
@@ -50,7 +51,6 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
         userList.setBorder(BorderFactory.createLineBorder(Color.black));
         new JScrollPane(userList);
         userListModel.addElement("(All Users)");
-        userListModel.addElement("Dummy");
         super.add(userList, BorderLayout.WEST);
         
         // Initialize chat history

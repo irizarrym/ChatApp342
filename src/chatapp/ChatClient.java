@@ -41,8 +41,16 @@ public class ChatClient
     
     public void stop()
     {
-        frontend.disconnectServer();
-        // TODO disconnect from server
+        try
+        {
+            server.disconnect();
+            frontend.disconnectServer();
+        }
+        catch (IOException ex)
+        {
+            frontend.chatClientError("Failed to stop server; " + ex.getMessage());
+            Logger.getLogger(ChatClient.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     public void setUserName(String name)
@@ -55,21 +63,37 @@ public class ChatClient
         return username;
     }
     
-    public void sendMessage(String message) throws IOException
+    public void sendMessage(String message)
     {
         if(server != null)
         {
-            server.sendPacket(ClientPacket.constructPublicMessagePacket(message));
-            frontend.sendMessageToAll(message);
+            try
+            {
+                server.sendPacket(ClientPacket.constructPublicMessagePacket(message));
+                frontend.sendMessageToAll(message);
+            }
+            catch (IOException ex)
+            {
+                frontend.chatClientError("Failed to send message; " + ex.getMessage());
+                Logger.getLogger(ChatClient.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
     
-    public void sendMessage(String username, String message) throws IOException
+    public void sendMessage(String username, String message)
     {
         if(server != null)
         {
-            server.sendPacket(ClientPacket.constructPrivateMessagePacket(username, message));
-            frontend.sendMessageToUser(username, message);
+            try
+            {
+                server.sendPacket(ClientPacket.constructPrivateMessagePacket(username, message));
+                frontend.sendMessageToUser(username, message);
+            }
+            catch (IOException ex)
+            {
+                frontend.chatClientError("Failed to send message; " + ex.getMessage());
+                Logger.getLogger(ChatClient.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -87,6 +111,20 @@ public class ChatClient
             in = new ObjectInputStream(socket.getInputStream());
             out = new ObjectOutputStream(socket.getOutputStream());
             active = true;
+        }
+        
+        public void disconnect() throws IOException
+        {
+            try
+            {
+                in.close();
+                out.close();
+                socket.close();
+            }
+            finally
+            {
+                active = false;
+            }
         }
         
         @Override
