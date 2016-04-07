@@ -112,6 +112,7 @@ public class ChatClient
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
             active = true;
+            out.writeObject(ClientPacket.constructUserNamePacket(username));
             super.start();
         }
         

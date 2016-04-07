@@ -50,7 +50,7 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
         userList.setPreferredSize(new Dimension(100, 100));
         userList.setBorder(BorderFactory.createLineBorder(Color.black));
         new JScrollPane(userList);
-        userListModel.addElement("(All Users)");
+        // userListModel.addElement("(All Users)");
         super.add(userList, BorderLayout.WEST);
         
         // Initialize chat history
@@ -193,6 +193,7 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
         messageBox.setEnabled(false);
         sendButton.setEnabled(false);
         messageBox.setText("");
+        userListModel.clear();
     }
 
     @Override

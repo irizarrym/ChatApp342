@@ -181,6 +181,7 @@ public class ChatServer
             username = ip;
             active = true;
             frontend.openConnection(ip);
+            super.start();
         }
         
         @Override

@@ -42,7 +42,7 @@ public interface ServerPacket
                         return;
                     }
                     
-                    if(lines[1] != "\r")
+                    if(false && lines[1] != "\r")
                     {
                         handler.packetError(packet, "missing blank line between header and body");
                         return;
@@ -70,7 +70,7 @@ public interface ServerPacket
                         return;
                     }
                     
-                    if(lines[1] != "")
+                    if(false && lines[1] != "")
                     {
                         handler.packetError(packet, "missing blank line between header and body");
                         return;
@@ -94,7 +94,7 @@ public interface ServerPacket
                         return;
                     }
                     
-                    if(lines[2] != "")
+                    if(false && lines[2] != "")
                     {
                         handler.packetError(packet, "missing blank line between header and body");
                         return;
@@ -126,7 +126,7 @@ public interface ServerPacket
                         return;
                     }
                     
-                    if(lines[1] != "")
+                    if(false && lines[1] != "")
                     {
                         handler.packetError(packet, "missing blank line between header and body");
                         return;
@@ -155,7 +155,7 @@ public interface ServerPacket
                         return;
                     }
                     
-                    if(lines[1] != "")
+                    if(false && lines[1] != "")
                     {
                         handler.packetError(packet, "missing blank line between header and body");
                         return;
