@@ -13,6 +13,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.logging.*;
+import javax.swing.*;
 
 public class ChatClient
 {
@@ -108,9 +109,10 @@ public class ChatClient
         {
             super();
             socket = new Socket(IP, port);
-            in = new ObjectInputStream(socket.getInputStream());
             out = new ObjectOutputStream(socket.getOutputStream());
+            in = new ObjectInputStream(socket.getInputStream());
             active = true;
+            super.start();
         }
         
         public void disconnect() throws IOException

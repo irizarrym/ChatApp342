@@ -1,1 +1,6 @@
 /bin/
+/build/
+/nbproject/
+/build.xml
+/manifest.mf
+/proj4s16.pdf

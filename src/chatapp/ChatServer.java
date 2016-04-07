@@ -61,9 +61,9 @@ public class ChatServer
         }
     }
     
-    public static void refreshUsers()
+    public static void refreshUsers() throws IOException
     {
-    	List<String> userlist;
+    	List<String> userlist = new ArrayList<String>();
     	
     	for(int i=0;i<clients.size();i++)
     	{
@@ -142,6 +142,7 @@ public class ChatServer
     				while(true)
     				{
     					clients.add(new ClientConnection (socket.accept()));
+                        refreshUsers();
     				}
     			}
     			catch (IOException e)
@@ -176,7 +177,8 @@ public class ChatServer
             in = new ObjectInputStream(clientSocket.getInputStream());
             out = new ObjectOutputStream(clientSocket.getOutputStream());
             ip = clientSocket.getRemoteSocketAddress().toString();
-            username = "New Client";
+            // username = "New Client";
+            username = ip;
             active = true;
             frontend.openConnection(ip);
         }
@@ -223,8 +225,15 @@ public class ChatServer
         		finally
         		{
         			active = false;
-        			ChatServer.refreshUsers();
-        			frontend.closeConnection(ip);
+                    try
+                    {
+                        ChatServer.refreshUsers();
+                        frontend.closeConnection(ip);
+                    }
+                    catch (IOException ex)
+                    {
+                        Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
         		}
         	}
         }
@@ -240,7 +249,14 @@ public class ChatServer
         {
             this.username = username;
             frontend.setUserName(ip, username);
-            ChatServer.refreshUsers();
+            try
+            {
+                ChatServer.refreshUsers();
+            }
+            catch (IOException ex)
+            {
+                Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
         
         public void sendPacket(String packet) throws IOException

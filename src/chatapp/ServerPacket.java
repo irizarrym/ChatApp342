@@ -26,8 +26,8 @@ public interface ServerPacket
      */
     public static void processPacket(ServerPacket handler, String packet)
     {
-        String[] lines = packet.split(System.getProperty("line.separator"));
-        Pattern username = Pattern.compile("^[A-Za-z0-9]+$");
+        String[] lines = packet.split("\\r?\\n");
+        Pattern username = Pattern.compile(".+");
         
         if(lines.length > 0)
         {
@@ -42,7 +42,7 @@ public interface ServerPacket
                         return;
                     }
                     
-                    if(lines[1] != "")
+                    if(lines[1] != "\r")
                     {
                         handler.packetError(packet, "missing blank line between header and body");
                         return;
