@@ -13,50 +13,68 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.util.logging.*;
+
 import javax.swing.*;
 
-public class ChatClient
+public class ChatClient 
 {
     private final ClientEvent frontend;
     private String username = "";
     ServerConnection server = null;
+    private boolean connected = false;
     
     public ChatClient(ClientEvent frontend)
     {
         this.frontend = frontend;
     }
     
+    public boolean connected()
+    {
+    	return connected;
+    }
+    
     public void start(String ip, int portNumber)
     {
-        try
+        if(connected) return;
+    	
+    	try
         {
             server = new ServerConnection(ip, portNumber);
             frontend.connectServer(ip, portNumber);
+            connected = true;
         }
         catch (IOException ex)
         {
             frontend.chatClientError("Failed to connect to server; " + ex.getMessage());
             Logger.getLogger(ChatClient.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        
     }
     
     public void stop()
     {
-        try
+        if(!connected) return;
+    	
+    	try
         {
             server.disconnect();
             frontend.disconnectServer();
+            connected = false;
         }
         catch (IOException ex)
         {
             frontend.chatClientError("Failed to stop server; " + ex.getMessage());
             Logger.getLogger(ChatClient.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        
     }
     
     public void setUserName(String name)
     {
         username = name;
+        if(connected) server.changeUserName(username);
     }
     
     public String getUserName()
@@ -67,10 +85,12 @@ public class ChatClient
     public void sendMessage(String message)
     {
         if(server != null)
+    	
         {
             try
             {
                 server.sendPacket(ClientPacket.constructPublicMessagePacket(message));
+            	
                 frontend.sendMessageToAll(message);
             }
             catch (IOException ex)
@@ -84,10 +104,12 @@ public class ChatClient
     public void sendMessage(String username, String message)
     {
         if(server != null)
+    	
         {
             try
             {
                 server.sendPacket(ClientPacket.constructPrivateMessagePacket(username, message));
+                
                 frontend.sendMessageToUser(username, message);
             }
             catch (IOException ex)
@@ -97,7 +119,7 @@ public class ChatClient
             }
         }
     }
-
+    
     private class ServerConnection extends Thread implements ClientPacket
     {
         private Socket socket;
@@ -112,7 +134,7 @@ public class ChatClient
             out = new ObjectOutputStream(socket.getOutputStream());
             in = new ObjectInputStream(socket.getInputStream());
             active = true;
-            out.writeObject(ClientPacket.constructUserNamePacket(username));
+            changeUserName(username);
             super.start();
         }
         
@@ -147,6 +169,17 @@ public class ChatClient
                 out.close();
                 socket.close();
             }
+            catch (EOFException ex)
+            {
+            	active = false;
+            	connected = false;
+            	
+            	frontend.chatClientError("Server offline.");
+            }
+            catch (SocketException ex)
+        	{
+        		
+        	}
             catch (IOException ex)
             {
                 Logger.getLogger(ChatClient.class.getName()).log(Level.SEVERE, null, ex);
@@ -157,6 +190,19 @@ public class ChatClient
             }
         }
         
+        public void changeUserName(String username)
+        {
+        	try 
+        	{
+				out.writeObject(ClientPacket.constructUserNamePacket(username));
+			} 
+        	catch (IOException e) 
+        	{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
+        
         @Override
         public void setUserList(List<String> userlist)
         {
@@ -164,9 +210,9 @@ public class ChatClient
         }
 
         @Override
-        public void receivePublicMessage(String username, String message)
+        public void receivePublicMessage(String senderName, String message)
         {
-            frontend.receiveMessage(username, message, false);
+            if(!username.equals(senderName)) frontend.receiveMessage(senderName, message, false);
         }
 
         @Override
@@ -192,4 +238,5 @@ public class ChatClient
             out.writeObject(packet);
         }
     }
+    
 }

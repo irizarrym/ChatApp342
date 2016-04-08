@@ -17,11 +17,11 @@ import javax.swing.*;
 public class GuiServer extends JFrame implements ActionListener, ServerEvent
 {
     private ChatServer server;
-    
     private JTextField textPort;
     private JButton buttonStart;
     private JButton buttonStop;
     private JTextArea serverHistory;
+    private JScrollPane scroll;
     
     public GuiServer()
     {
@@ -44,11 +44,14 @@ public class GuiServer extends JFrame implements ActionListener, ServerEvent
         topPanel.add(buttonStart);
         topPanel.add(buttonStop);
         super.add(topPanel, BorderLayout.NORTH);
+        textPort.setText("Enter Port Number like: 8888");
         
         // Initialize history text area
         serverHistory = new JTextArea();
         serverHistory.setEditable(false);
-        super.add(serverHistory, BorderLayout.CENTER);
+        scroll = new JScrollPane(serverHistory);
+        
+        super.add(scroll, BorderLayout.CENTER);
         
         // Initialize server backend
         server = new ChatServer(this);
@@ -64,8 +67,16 @@ public class GuiServer extends JFrame implements ActionListener, ServerEvent
     {
         if(e.getSource() == buttonStart)
         {
-            int portNumber = Integer.parseInt(textPort.getText());
-            server.start(portNumber);
+            try
+            {
+            	int portNumber = Integer.parseInt(textPort.getText());
+            	server.start(portNumber);
+            }
+            catch (NumberFormatException ex)
+            {
+            	appendHistory("Please enter a port number.");
+            }
+        	
         }
         if(e.getSource() == buttonStop)
         {
@@ -147,6 +158,7 @@ public class GuiServer extends JFrame implements ActionListener, ServerEvent
     private void appendHistory(String line)
     {
         serverHistory.append(line + System.getProperty("line.separator"));
+        serverHistory.setCaretPosition(serverHistory.getDocument().getLength());
     }
     
     public static void main(String[] args)

@@ -23,9 +23,14 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
     private int serverPort;
     
     private MenuBar menuBar;
+    private JLabel inputName;
+    private JTextField nameField;
+    private JButton connectButton;
+    private JButton changeName;
     private JList userList;
     private DefaultListModel userListModel;
     private JTextArea chatHistory;
+    private JScrollPane scroll;
     private JTextField messageBox;
     private JButton sendButton;
     
@@ -40,6 +45,9 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
         // Create menu bar
         menuBar = new MenuBar();
         super.add(menuBar.getMenu(), BorderLayout.NORTH);
+        
+        
+        
         
         // Initializer user list
         userListModel = new DefaultListModel();
@@ -57,7 +65,25 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
         chatHistory = new JTextArea("Starting client...\n");
         chatHistory.setEditable(false);
         chatHistory.setBorder(BorderFactory.createLineBorder(Color.black));
-        super.add(chatHistory, BorderLayout.CENTER);
+        scroll = new JScrollPane(chatHistory);
+        
+        
+        inputName = new JLabel("Enter Username:");
+        nameField = new JTextField("New Client " + (int)(Math.random()*10000));
+        connectButton = new JButton("Connect");
+        connectButton.addActionListener(this);
+        changeName = new JButton("Change Username");
+        changeName.addActionListener(this);
+        JPanel connectPanel = new JPanel();
+        connectPanel.add(inputName);
+        connectPanel.add(nameField);
+        connectPanel.add(connectButton);
+        connectPanel.add(changeName);
+        
+        JPanel centerPanel = new JPanel(new BorderLayout());
+        centerPanel.add(connectPanel, BorderLayout.NORTH);
+        centerPanel.add(scroll, BorderLayout.CENTER);
+        super.add(centerPanel, BorderLayout.CENTER);
         
         // Initialize message box and send button
         messageBox = new JTextField();
@@ -82,6 +108,8 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
         askServerIP(true);
         askServerPort(true);
         askUserName(true);
+        
+        appendHistory("Please enter a username and connect.");
     }
     
     private class MenuBar implements ActionListener
@@ -134,10 +162,12 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
             if(e.getSource() == menuConnect)
             {
                 client.start(serverIP, serverPort);
+                if(client.connected()) connectButton.setEnabled(false);
             }
             else if(e.getSource() == menuDisconnect)
             {
                 client.stop();
+                if(!client.connected()) connectButton.setEnabled(true);
             }
             else if(e.getSource() == menuSetIP)
             {
@@ -160,9 +190,13 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
     {
         if(e.getSource() == sendButton || e.getSource() == messageBox)
         {
-            if(userList.getSelectedIndex() < 0 || messageBox.getText().equals(""))
+            if(userList.getSelectedIndex() < 0)
             {
-                return;
+                appendHistory("Please select a receiver from the left, then try again.\nFor public message, select (All users).");
+            }
+            else if(messageBox.getText().equals(""))
+            {
+            	return;
             }
             else if(userList.getSelectedIndex() == 0)
             {
@@ -175,6 +209,16 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
             }
             
             messageBox.setText("");
+        }
+        else if(e.getSource() == connectButton)
+        {
+        	askUserName(false);
+        	client.start(serverIP, serverPort);
+        	if(client.connected()) connectButton.setEnabled(false);
+        }
+        else if(e.getSource() == changeName)
+        {
+        	askUserName(false);
         }
     }
 
@@ -287,12 +331,12 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
     private void askUserName(boolean force)
     {
         final String message = "Type in a username:";   
-        String result = null;
+        String result = nameField.getText();
         
-        do
+        while(force && (result == null || result.equals("")))
         {
             result = JOptionPane.showInputDialog(message);
-        } while(force && (result == null || result.equals("")));
+        } 
         
         if(result != null) client.setUserName(result);
     }
@@ -300,6 +344,7 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
     private void appendHistory(String line)
     {
         chatHistory.append(line + System.getProperty("line.separator"));
+        chatHistory.setCaretPosition(chatHistory.getDocument().getLength());
     }
     
     public static void main(String[] args)

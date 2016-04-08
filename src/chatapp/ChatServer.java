@@ -9,6 +9,7 @@
 
 package chatapp;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -48,17 +49,17 @@ public class ChatServer
         try
         {
         	socket.close();
-        	for(int i=0;i<clients.size();i++)
-        	{
-        		if(clients.get(i).active) clients.get(i).disconnect();
-        	}
-        	frontend.stopServer();
         }
         catch (IOException e)
         {
-        	System.err.println("Could not stop.");
-        	System.exit(1);
+        	
         }
+    	
+    	for(int i=0;i<clients.size();i++)
+		{
+			if(clients.get(i).active) clients.get(i).disconnect();
+		}
+		frontend.stopServer();
     }
     
     public static void refreshUsers() throws IOException
@@ -147,15 +148,17 @@ public class ChatServer
     			}
     			catch (IOException e)
     			{
-    				System.err.println("Accept failed.");
+    				
     			}
     		} 
             catch (IOException e) 
             {
     			System.err.println("Could not start.");
+    			frontend.chatServerError("Could not start.");
     			//System.exit(1);
     		}
     	}
+    	
     }
     
     /**
@@ -177,9 +180,14 @@ public class ChatServer
             in = new ObjectInputStream(clientSocket.getInputStream());
             out = new ObjectOutputStream(clientSocket.getOutputStream());
             ip = clientSocket.getRemoteSocketAddress().toString();
+//<<<<<<< Updated upstream
             // username = "New Client";
             username = ip;
+//=======
+            //username = "New Client " + (int)(Math.random()*10000);
+//>>>>>>> Stashed changes
             active = true;
+            //out.writeObject("Welcome");
             frontend.openConnection(ip);
             super.start();
         }
@@ -187,9 +195,10 @@ public class ChatServer
         @Override
         public void run()
         {
-        	
         	try
             {
+                ChatServer.refreshUsers();
+                
                 String packet;
                 while((packet = (String)in.readObject()) != null)
                 {
@@ -197,6 +206,14 @@ public class ChatServer
                 }
                 
             }
+        	catch (SocketException ex)
+        	{
+        		disconnect();
+        	}
+        	catch (EOFException ex)
+        	{
+        		disconnect();
+        	}
             catch (IOException ex)
             {
                 Logger.getLogger(ChatServer.class.getName()).log(Level.SEVERE, null, ex);
