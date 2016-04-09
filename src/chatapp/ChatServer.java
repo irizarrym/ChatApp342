@@ -62,6 +62,9 @@ public class ChatServer
 		frontend.stopServer();
     }
     
+    /**
+     * Re-build the list of connected clients and send to all of them
+     */
     public static void refreshUsers() throws IOException
     {
     	List<String> userlist = new ArrayList<String>();
@@ -71,16 +74,21 @@ public class ChatServer
     		if(clients.get(i).active) userlist.add(clients.get(i).getUserName());
     	}
     	
+    	String listPacket = ServerPacket.constructUserListPacket(userlist);
+    	
     	for(int i=0;i<clients.size();i++)
     	{
     		if(clients.get(i).active) 
     		{
-    			clients.get(i).sendPacket(ServerPacket.constructUserListPacket(userlist));
+    			clients.get(i).sendPacket(listPacket);
     			frontend.sendUserList(clients.get(i).getUserName());
     		}
     	}
     }
     
+    /**
+     * Call every thread to send the message
+     */
     public static void publicMessage(String packet)
     {
     	for(int i=0;i<clients.size();i++)
@@ -99,6 +107,9 @@ public class ChatServer
     	}
     }
     
+    /**
+     * Call the corresponding thread to send the message
+     */
     public static void privateMessage(String to, String packet)
     {
     	for(int i=0;i<clients.size();i++)
@@ -121,14 +132,18 @@ public class ChatServer
     	}
     }
     
+    /**
+     * The central listener class
+     */
     private class ClientListener extends Thread
     {
     	int portNumber;
     	
     	public ClientListener (int port)
     	{
+    		super();
     		portNumber = port;
-    		start();
+    		super.start();
     	}
     	
     	@Override
@@ -143,12 +158,12 @@ public class ChatServer
     				while(true)
     				{
     					clients.add(new ClientConnection (socket.accept()));
-                        refreshUsers();
+                        //refreshUsers();
     				}
     			}
     			catch (IOException e)
     			{
-    				
+    				frontend.chatServerError("failed to connect.");
     			}
     		} 
             catch (IOException e) 
@@ -265,11 +280,13 @@ public class ChatServer
         @Override
         public void setUserName(String username)
         {
-            this.username = username;
+        	
+        	this.username = username;
             frontend.setUserName(ip, username);
             try
             {
                 ChatServer.refreshUsers();
+                
             }
             catch (IOException ex)
             {

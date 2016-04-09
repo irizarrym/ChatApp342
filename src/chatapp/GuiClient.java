@@ -67,7 +67,7 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
         chatHistory.setBorder(BorderFactory.createLineBorder(Color.black));
         scroll = new JScrollPane(chatHistory);
         
-        
+        // Initialize rename and connection buttons
         inputName = new JLabel("Enter Username:");
         nameField = new JTextField("New Client " + (int)(Math.random()*10000));
         connectButton = new JButton("Connect");
@@ -250,7 +250,7 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
     @Override
     public void receiveUserList(List<String> userlist)
     {
-        userListModel.clear();
+    	userListModel.clear();
         userListModel.addElement("(All Users)");
         for(String s : userlist)
         {
