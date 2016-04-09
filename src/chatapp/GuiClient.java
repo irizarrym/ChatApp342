@@ -162,12 +162,10 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
             if(e.getSource() == menuConnect)
             {
                 client.start(serverIP, serverPort);
-                if(client.connected()) connectButton.setEnabled(false);
             }
             else if(e.getSource() == menuDisconnect)
             {
                 client.stop();
-                if(!client.connected()) connectButton.setEnabled(true);
             }
             else if(e.getSource() == menuSetIP)
             {
@@ -214,7 +212,6 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
         {
         	askUserName(false);
         	client.start(serverIP, serverPort);
-        	if(client.connected()) connectButton.setEnabled(false);
         }
         else if(e.getSource() == changeName)
         {
@@ -228,6 +225,7 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
         appendHistory("Connected to server at " + ip + ":" + portNumber);
         messageBox.setEnabled(true);
         sendButton.setEnabled(true);
+        connectButton.setEnabled(false);
     }
 
     @Override
@@ -236,6 +234,7 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
         appendHistory("Disconnected from server");
         messageBox.setEnabled(false);
         sendButton.setEnabled(false);
+        connectButton.setEnabled(true);
         messageBox.setText("");
         userListModel.clear();
     }

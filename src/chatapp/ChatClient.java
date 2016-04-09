@@ -173,8 +173,8 @@ public class ChatClient
             {
             	active = false;
             	connected = false;
-            	
             	frontend.chatClientError("Server offline.");
+                frontend.disconnectServer();
             }
             catch (SocketException ex)
         	{
