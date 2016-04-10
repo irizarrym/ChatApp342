@@ -22,6 +22,8 @@ public class GuiServer extends JFrame implements ActionListener, ServerEvent
     private JButton buttonStop;
     private JTextArea serverHistory;
     private JScrollPane scroll;
+    private JList userList;
+    private DefaultListModel userListModel;
     
     public GuiServer()
     {
@@ -50,8 +52,18 @@ public class GuiServer extends JFrame implements ActionListener, ServerEvent
         serverHistory = new JTextArea();
         serverHistory.setEditable(false);
         scroll = new JScrollPane(serverHistory);
-        
         super.add(scroll, BorderLayout.CENTER);
+        
+        // Initializer user list
+        userListModel = new DefaultListModel();
+        userList = new JList(userListModel);
+        userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        userList.setLayoutOrientation(JList.VERTICAL);
+        userList.setVisibleRowCount(-1);
+        userList.setPreferredSize(new Dimension(100, 100));
+        userList.setBorder(BorderFactory.createLineBorder(Color.black));
+        new JScrollPane(userList);
+        super.add(userList, BorderLayout.WEST);
         
         // Initialize server backend
         server = new ChatServer(this);
@@ -110,12 +122,20 @@ public class GuiServer extends JFrame implements ActionListener, ServerEvent
     public void closeConnection(String ip)
     {
         appendHistory("Close connection on " + ip);
+        userListModel.clear();
     }
 
     @Override
     public void setUserName(String ip, String username)
     {
         appendHistory(ip + " has set username to " + username);
+        
+        // Update user list
+        userListModel.clear();
+        for(String s : server.getUserList())
+        {
+            userListModel.addElement(s);
+        }
     }
 
     @Override

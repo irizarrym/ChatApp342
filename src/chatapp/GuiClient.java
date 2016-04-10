@@ -46,9 +46,6 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
         menuBar = new MenuBar();
         super.add(menuBar.getMenu(), BorderLayout.NORTH);
         
-        
-        
-        
         // Initializer user list
         userListModel = new DefaultListModel();
         userList = new JList(userListModel);
@@ -58,7 +55,6 @@ public class GuiClient extends JFrame implements ActionListener, ClientEvent
         userList.setPreferredSize(new Dimension(100, 100));
         userList.setBorder(BorderFactory.createLineBorder(Color.black));
         new JScrollPane(userList);
-        // userListModel.addElement("(All Users)");
         super.add(userList, BorderLayout.WEST);
         
         // Initialize chat history

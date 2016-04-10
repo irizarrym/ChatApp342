@@ -62,19 +62,24 @@ public class ChatServer
 		frontend.stopServer();
     }
     
-    /**
-     * Re-build the list of connected clients and send to all of them
-     */
-    public static void refreshUsers() throws IOException
+    public static List<String> getUserList()
     {
-    	List<String> userlist = new ArrayList<String>();
+        List<String> userlist = new ArrayList<String>();
     	
     	for(int i=0;i<clients.size();i++)
     	{
     		if(clients.get(i).active) userlist.add(clients.get(i).getUserName());
     	}
-    	
-    	String listPacket = ServerPacket.constructUserListPacket(userlist);
+        
+        return userlist;
+    }
+    
+    /**
+     * Re-build the list of connected clients and send to all of them
+     */
+    public static void refreshUsers() throws IOException
+    {
+    	String listPacket = ServerPacket.constructUserListPacket(getUserList());
     	
     	for(int i=0;i<clients.size();i++)
     	{
