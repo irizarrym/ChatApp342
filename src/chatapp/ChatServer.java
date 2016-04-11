@@ -25,6 +25,12 @@ public class ChatServer
     private static ArrayList<ClientConnection> clients;
     private ClientListener listener;
     
+    /**
+     * Constructor which receives an object for the frontend
+     * 
+     * @param frontend  A generic frontend which receives and displays output
+     *                  from the backend
+     */
     public ChatServer(ServerEvent frontend)
     {
         this.frontend = frontend;
@@ -193,6 +199,13 @@ public class ChatServer
         private ObjectOutputStream out;
         boolean active = false;
         
+        /**
+         * Constructor which launches a new thread to listen for incoming 
+         * traffic on the specified socket
+         * 
+         * @param clientSoc     Socket for client
+         * @throws IOException 
+         */
         public ClientConnection(Socket clientSoc) throws IOException
         {
             super();
@@ -200,18 +213,15 @@ public class ChatServer
             in = new ObjectInputStream(clientSocket.getInputStream());
             out = new ObjectOutputStream(clientSocket.getOutputStream());
             ip = clientSocket.getRemoteSocketAddress().toString();
-//<<<<<<< Updated upstream
-            // username = "New Client";
             username = ip;
-//=======
-            //username = "New Client " + (int)(Math.random()*10000);
-//>>>>>>> Stashed changes
             active = true;
-            //out.writeObject("Welcome");
             frontend.openConnection(ip);
             super.start();
         }
         
+        /**
+         * Entry point for new thread
+         */
         @Override
         public void run()
         {
@@ -224,7 +234,6 @@ public class ChatServer
                 {
                     ServerPacket.processPacket(this, packet);
                 }
-                
             }
         	catch (SocketException ex)
         	{
@@ -244,6 +253,9 @@ public class ChatServer
             }
         }
         
+        /**
+         * Disconnect from the client
+         */
         @Override
         public void disconnect()
         {
@@ -276,12 +288,22 @@ public class ChatServer
         	}
         }
         
+        /**
+         * Get the username for this client
+         * 
+         * @return  Username of client
+         */
         @Override
         public String getUserName()
         {
             return username;
         }
 
+        /**
+         * Change the username for this client
+         * 
+         * @param username  New username to set for this client
+         */
         @Override
         public void setUserName(String username)
         {
@@ -299,11 +321,22 @@ public class ChatServer
             }
         }
         
+        /**
+         * Send a raw packet to this client
+         * 
+         * @param packet        Raw text of packet
+         * @throws IOException 
+         */
         public void sendPacket(String packet) throws IOException
         {
         	out.writeObject(packet);
         }
 
+        /**
+         * Event: A public message packet was prepared to be sent to the client
+         * 
+         * @param packet    Raw text of packet
+         */
         @Override
         public void sendPublicMessage(String packet)
         {
@@ -311,20 +344,37 @@ public class ChatServer
         	frontend.sendMessageToAll(username, packet);
         }
 
+        /**
+         * Event: A private message packet was prepared to be sent to the client
+         * 
+         * @param from      Username of the client which sent the private message
+         * @param packet    Raw text of packet
+         */
         @Override
-        public void sendPrivateMessage(String to, String packet)
+        public void sendPrivateMessage(String from, String packet)
         {
-            ChatServer.privateMessage(to, packet);
-        	frontend.sendMessageToUser(username, to, packet);
+            ChatServer.privateMessage(from, packet);
+        	frontend.sendMessageToUser(username, from, packet);
         }
 
+        /**
+         * Event: A status/error packet was received from the client
+         * 
+         * @param status    Text describing the status or error
+         * @param isError   True if error, false if status
+         */
         @Override
         public void receiveStatusPacket(String status, boolean isError)
         {
             frontend.receiveStatusPacket(status, isError);
-            //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 
+        /**
+         * Event: An error occurred parsing this packet
+         * 
+         * @param packet    Raw text of packet
+         * @param error     Text describing the error
+         */
         @Override
         public void packetError(String packet, String error)
         {
